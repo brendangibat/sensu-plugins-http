@@ -33,6 +33,7 @@ require 'sensu-plugin/check/cli'
 require 'json'
 require 'net/http'
 require 'net/https'
+require 'uri'
 
 #
 # Check JSON
@@ -55,6 +56,8 @@ class CheckJson < Sensu::Plugin::Check::CLI
   option :timeout, short: '-t SECS', proc: proc(&:to_i), default: 15
   option :key, short: '-K KEY', long: '--key KEY'
   option :value, short: '-v VALUE', long: '--value VALUE'
+  option :json_query, short: '-Q json_query', long: '--query json_query'
+  option :redirect_limit, short: '-r redirect_limit', long: '--redirect-limit redirect_limit', default: 10, proc: proc(&:to_i)
 
   def run
     if config[:url]
@@ -90,8 +93,39 @@ class CheckJson < Sensu::Plugin::Check::CLI
     return false
   end
 
-  def acquire_resource
-    http = Net::HTTP.new(config[:host], config[:port])
+  def fetch(uri=nil, limit = 10)
+    if limit == 0
+      raise "Too many HTTP redirects (max limit of #{config[:redirect_limit]})"
+    end
+
+    response = create_request(uri)
+
+    case response
+    when Net::HTTPSuccess then
+      response
+    when Net::HTTPRedirection then
+      location = response['location']
+      fetch(URI.parse(location), limit - 1)
+    else
+      response.value
+    end
+  end
+
+  def create_request(uri)
+    if uri.nil?
+      if config[:uri]
+        uri = URI.parse(config[:url])
+      else
+        uri = URI::HTTP.build(
+          :host => config[:host],
+          :port => config[:port],
+          :path => config[:path],
+          :query => config[:query]
+        )
+      end
+    end
+
+    http = Net::HTTP.new(uri.host, uri.port)
 
     if config[:ssl]
       http.use_ssl = true
@@ -105,9 +139,9 @@ class CheckJson < Sensu::Plugin::Check::CLI
     end
 
     if config[:method] == 'POST'
-      req = Net::HTTP::Post.new([config[:path], config[:query]].compact.join('?'))
+      req = Net::HTTP::Post.new(uri.request_uri)
     else
-      req = Net::HTTP::Get.new([config[:path], config[:query]].compact.join('?'))
+      req = Net::HTTP::Get.new(uri.request_uri)
     end
     if config[:postbody]
       post_body = IO.readlines(config[:postbody])
@@ -122,11 +156,17 @@ class CheckJson < Sensu::Plugin::Check::CLI
         req[h] = v.strip
       end
     end
-    res = http.request(req)
+
+    http.request(req)
+  end
+
+  def acquire_resource
+
+    res = fetch(nil, config[:redirect_limit])
 
     critical res.code unless res.code =~ /^2/
     critical 'invalid JSON from request' unless json_valid?(res.body)
-    ok 'valid JSON returned' if config[:key].nil? && config[:value].nil?
+    ok 'valid JSON returned' if config[:key].nil? && config[:value].nil? && config[:json_query].nil?
 
     json = JSON.parse(res.body)
 
