@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 #
 #   check-http-cors
 #
@@ -67,7 +67,7 @@ class CheckCORS < Sensu::Plugin::Check::CLI
       config[:ssl] = uri.scheme == 'https'
     else
       # #YELLOW
-      unless config[:host] && config[:path] # rubocop:disable IfUnlessModifier
+      unless config[:host] && config[:path]
         unknown 'No URL specified'
       end
       config[:port] ||= config[:ssl] ? 443 : 80
@@ -84,8 +84,8 @@ class CheckCORS < Sensu::Plugin::Check::CLI
     end
   end
 
-  def has_cors?(res)
-    headers = Hash.new
+  def cors?(res)
+    headers = {}
 
     if config[:header]
       config[:header].split(',').each do |header|
@@ -94,7 +94,7 @@ class CheckCORS < Sensu::Plugin::Check::CLI
       end
     end
 
-    res["Access-Control-Allow-Origin"] == headers["Origin"]
+    res['Access-Control-Allow-Origin'] == headers['Origin']
   end
 
   def acquire_resource
@@ -102,7 +102,7 @@ class CheckCORS < Sensu::Plugin::Check::CLI
 
     case res.code
     when /^2/
-      if has_cors?(res)
+      if cors?(res)
         ok 'Request has matching CORS headers'
       else
         critical 'Response does not have valid CORS headers'
@@ -127,7 +127,7 @@ class CheckCORS < Sensu::Plugin::Check::CLI
     end
 
     req = Net::HTTP::Get.new([config[:path], config[:query]].compact.join('?'))
-    if !config[:user].nil? && !config[:password].nil?
+    unless config[:user].nil? && !config[:password].nil?
       req.basic_auth config[:user], config[:password]
     end
 

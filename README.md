@@ -5,7 +5,6 @@
 [![Code Climate](https://codeclimate.com/github/sensu-plugins/sensu-plugins-http/badges/gpa.svg)](https://codeclimate.com/github/sensu-plugins/sensu-plugins-http)
 [![Test Coverage](https://codeclimate.com/github/sensu-plugins/sensu-plugins-http/badges/coverage.svg)](https://codeclimate.com/github/sensu-plugins/sensu-plugins-http)
 [![Dependency Status](https://gemnasium.com/sensu-plugins/sensu-plugins-http.svg)](https://gemnasium.com/sensu-plugins/sensu-plugins-http)
-[![Codeship Status for sensu-plugins/sensu-plugins-http](https://codeship.com/projects/38675d80-ccdc-0132-c33d-1edd85dc7674/status?branch=master)](https://codeship.com/projects/76165)
 
 ## Functionality
 
@@ -15,8 +14,14 @@
  * bin/check-https-cert.rb
  * bin/check-last-modified.rb
  * bin/metrics-curl.rb
+ * bin/check-head-redirect.rb
+ * bin/check-http-cors.rb
 
 ## Usage
+
+check-head-redirect.rb and check-last-modified.rb can be used in conjunction with AWS to pull configuration from a specific bucket and file.
+
+This is helpful if you do not want to configure connection information as an argument to the sensu checks. If a bucket and key are specified that the environment the sensu check executes in has access to, or you provide an AWS key and token, the checks will pull the specified JSON file from S3 and merge the JSON config in to the current check configuration.
 
 ## Installation
 

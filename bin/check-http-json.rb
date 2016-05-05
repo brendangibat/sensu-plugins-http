@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 #
 #   check-http-json
 #
@@ -146,11 +146,12 @@ class CheckJson < Sensu::Plugin::Check::CLI
     else
       req = Net::HTTP::Get.new(uri.request_uri)
     end
+
     if config[:postbody]
       post_body = IO.readlines(config[:postbody])
       req.body = post_body.join
     end
-    if !config[:user].nil? && !config[:password].nil?
+    unless config[:user].nil? && !config[:password].nil?
       req.basic_auth config[:user], config[:password]
     end
     if config[:header]
@@ -192,7 +193,6 @@ class CheckJson < Sensu::Plugin::Check::CLI
   end
 
   def acquire_resource
-
     res = fetch(nil, config[:redirect_limit])
 
     critical res.code unless res.code =~ /^2/
@@ -227,7 +227,6 @@ end
 module Enumerable
   def flatten_with_path(parent_prefix = nil)
     res = {}
-
     self.each_with_index do |elem, i|
       if elem.is_a?(Array)
         k, v = elem

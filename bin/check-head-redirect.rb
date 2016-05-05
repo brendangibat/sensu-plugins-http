@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 #
 #   check-head-redirect
 #
@@ -32,70 +32,70 @@ require 'sensu-plugins-http'
 #
 # Checks that redirection links can be followed in a set number of requests.
 #
-class CheckLastModified < Sensu::Plugin::Check::CLI
+class CheckHeadRedirect < Sensu::Plugin::Check::CLI
   include Common
-  option :aws_access_key,
-         short:       '-a AWS_ACCESS_KEY',
-         long:        '--aws-access-key AWS_ACCESS_KEY',
-         description: "AWS Access Key. Either set ENV['AWS_ACCESS_KEY'] or provide it as an option",
-         default:     ENV['AWS_ACCESS_KEY']
+  option :aws_access_key_id,
+         short:       '-a AWS_ACCESS_KEY_ID',
+         long:        '--aws-access-key-id AWS_ACCESS_KEY_ID',
+         description: 'AWS Access Key. Either set ENV["AWS_ACCESS_KEY_ID"] or provide it as an option',
+         default:     ENV['AWS_ACCESS_KEY_ID']
 
   option :aws_secret_access_key,
-         short:       '-k AWS_SECRET_KEY',
-         long:        '--aws-secret-access-key AWS_SECRET_KEY',
-         description: "AWS Secret Access Key. Either set ENV['AWS_SECRET_KEY'] or provide it as an option",
-         default:     ENV['AWS_SECRET_KEY']
+         short:       '-k AWS_SECRET_ACCESS_KEY',
+         long:        '--aws-secret-access-key AWS_SECRET_ACCESS_KEY',
+         description: 'AWS Secret Access Key. Either set ENV["AWS_SECRET_ACCESS_KEY"] or provide it as an option',
+         default:     ENV['AWS_SECRET_ACCESS_KEY']
 
   option :aws_region,
          short:       '-r AWS_REGION',
          long:        '--aws-region REGION',
-         description: 'AWS Region (defaults to us-east-1).',
+         description: 'AWS Region (defaults to us-east-1)',
          default:     'us-east-1'
 
   option :s3_config_bucket,
-         short:       '-s S3_CONFIG_FILE',
-         long:        '--s3-config-file S3_CONFIG_FILE',
+         short:       '-s S3_CONFIG_BUCKET',
+         long:        '--s3-config-bucket S3_CONFIG_BUCKET',
          description: 'S3 config bucket'
 
   option :s3_config_key,
          short:       '-k S3_CONFIG_KEY',
-         long:        '--s3-config-KEY S3_CONFIG_KEY',
+         long:        '--s3-config-key S3_CONFIG_KEY',
          description: 'S3 config key'
 
   option :url,
-          short: '-u URL',
-          long: '--url URL',
-          description: 'The URL of the file to be checked'
+         short: '-u URL',
+         long: '--url URL',
+         description: 'The URL of the file to be checked'
 
   option :user,
-          short: '-U USER',
-          long: '--username USER',
-          description: 'A username to connect as'
+         short: '-U USER',
+         long: '--username USER',
+         description: 'A username to connect as'
 
   option :password,
-          short: '-a PASS',
-          long: '--password PASS',
-          description: 'A password to use for the username'
+         short: '-a PASS',
+         long: '--password PASS',
+         description: 'A password to use for the username'
 
   option :follow_redirects,
-          short: '-R FOLLOW_REDIRECTS',
-          long: '--redirect FOLLOW_REDIRECTS',
-          proc: proc(&:to_i),
-          default: 0,
-          description: 'Follow first <N> redirects'
+         short: '-R FOLLOW_REDIRECTS',
+         long: '--redirect FOLLOW_REDIRECTS',
+         proc: proc(&:to_i),
+         default: 0,
+         description: 'Follow first <N> redirects'
 
   option :follow_redirects_with_get,
-          short: '-g GET_REDIRECTS',
-          long: '--get-redirects GET_REDIRECTS',
-          proc: proc(&:to_i),
-          default: 0,
-          description: 'Follow first <N> redirects with GET requests'
+         short: '-g GET_REDIRECTS',
+         long: '--get-redirects GET_REDIRECTS',
+         proc: proc(&:to_i),
+         default: 0,
+         description: 'Follow first <N> redirects with GET requests'
 
   option :auth_first_only,
-          short: '-A',
-          long: '--auth-first-only',
-          default: true,
-          description: 'Use basic auth on first request only'
+         short: '-A',
+         long: '--auth-first-only',
+         default: true,
+         description: 'Use basic auth on first request only'
 
   def follow_uri(uri, total_redirects, get_redirects, auth_count)
     location = URI(uri)
@@ -111,7 +111,7 @@ class CheckLastModified < Sensu::Plugin::Check::CLI
       request = Net::HTTP::Head.new(location.request_uri)
     end
 
-    if auth_count > 0 && config[:user] and config[:password] and total_redirects == config[:follow_redirects]
+    if auth_count > 0 && config[:user] && config[:password] && total_redirects == config[:follow_redirects]
       http.use_ssl = true
       request.basic_auth(config[:user], config[:password])
       auth_count -= 1
@@ -135,18 +135,15 @@ class CheckLastModified < Sensu::Plugin::Check::CLI
   end
 
   def run
-
-    aws_config
     merge_s3_config
 
     url = config[:url]
 
-    #Validate arguments
-    if not url
-      unknown "No URL specified"
+    # Validate arguments
+    unless url
+      unknown 'No URL specified'
     end
 
     follow_uri(url, config[:follow_redirects], config[:follow_redirects_with_get], config[:auth_first_only] ? 1 : config[:follow_redirects])
-
   end
 end
