@@ -16,6 +16,7 @@
  * bin/metrics-curl.rb
  * bin/check-head-redirect.rb
  * bin/check-http-cors.rb
+ * bin/metrics-http-json-deep.rb
 
 ## Usage
 
