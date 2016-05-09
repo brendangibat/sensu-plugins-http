@@ -207,8 +207,6 @@ class CheckJson < Sensu::Plugin::Check::CLI
       begin
         keys = config[:key].scan(/(?:\\\.|[^.])+/).map { |key| key.gsub(/\\./, '.') }
 
-        puts keys
-
         leaf = keys.reduce(json) do |tree, key|
           fail "could not find key: #{config[:key]}" unless tree.key?(key)
           tree[key]
